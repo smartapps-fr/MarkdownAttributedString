@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
 
   spec.name         = "DDMarkdownAttributedString"
-  spec.version      = "0.1.0"
+  spec.version      = "0.1.1"
   spec.summary      = "Adding Markdown support to NSAttributedString."
 
   spec.description  = <<-DESC

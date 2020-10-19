@@ -36,6 +36,7 @@
 #endif
 
 #define ALLOW_CODE_MARKERS 0	// EXPERIMENTAL - Currently literals aren't escaped and style attributes are baked in (not using styleAttributes).
+#define ALLOW_UNDERLINE 1       // EXPERIMENTAL - Not standard but should work!
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -58,6 +59,10 @@ extern MarkdownStyleKey MarkdownStyleEmphasisDouble;                // attribute
 extern MarkdownStyleKey MarkdownStyleEmphasisBoth;					// attribute dictionary for occurances of _ or * within __ or ** (emphasis and strong, typically a bold italic font)
 
 extern MarkdownStyleKey MarkdownStyleLink;							// optional attribute dictionary to use instead of NSLinkAttributeName, link will be styled with attributes instead of clickable
+
+#if ALLOW_UNDERLINE
+extern MarkdownStyleKey MarkdownStyleUnderline;
+#endif
 
 #if ALLOW_CODE_MARKERS
 extern MarkdownStyleKey MarkdownStyleCode;			                // EXPERIMENTAL - attribute dictionary for occuranges of `

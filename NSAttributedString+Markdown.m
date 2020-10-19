@@ -69,6 +69,11 @@
 	#define DebugLog(...) do {} while (0)
 #endif
 
+#if ALLOW_UNDERLINE
+NSString *const underlineStart = @"<u>";
+NSString *const underlineEnd = @"</u>";
+#endif
+
 NSString *const literalBackslash = @"\\";
 NSString *const literalAsterisk = @"*";
 NSString *const literalUnderscore = @"_";
@@ -124,6 +129,10 @@ MarkdownStyleKey MarkdownStyleEmphasisBoth = @"MarkdownStyleEmphasisBoth";
 
 MarkdownStyleKey MarkdownStyleLink = @"MarkdownStyleLink";
 
+#if ALLOW_UNDERLINE
+MarkdownStyleKey MarkdownStyleUnderline = @"MarkdownStyleUnderline";
+#endif
+
 #if ALLOW_CODE_MARKERS
 MarkdownStyleKey MarkdownStyleCode = @"MarkdownStyleCode";
 #endif
@@ -171,6 +180,7 @@ typedef enum {
     MarkdownSpanLinkInline,
     MarkdownSpanLinkAutomatic,
     MarkdownSpanCode, // not supported
+    MarkdownSpanUnderline,
 } MarkdownSpanType;
 
 static BOOL hasCharacterRelative(NSString *string, NSRange range, NSInteger offset, unichar character)
@@ -474,8 +484,10 @@ static void updateAttributedString(NSMutableAttributedString *result, NSString *
 									if (styleAttributes[MarkdownStyleLink]) {
 										replacementAttributes = styleAttributes[MarkdownStyleLink];
 									}
-									else {
-										replacementAttributes = @{ NSLinkAttributeName: URL };
+                                    if (!replacementAttributes[NSLinkAttributeName]) {
+                                        NSMutableDictionary *dict = [replacementAttributes mutableCopy];
+                                        dict[NSLinkAttributeName] = URL;
+                                        replacementAttributes = dict;
 									}
 									replaceMarkers = YES;
 								}
@@ -491,9 +503,11 @@ static void updateAttributedString(NSMutableAttributedString *result, NSString *
 									if (styleAttributes[MarkdownStyleLink]) {
 										replacementAttributes = styleAttributes[MarkdownStyleLink];
 									}
-									else {
-										replacementAttributes = @{ NSLinkAttributeName: URL };
-									}
+                                    if (!replacementAttributes[NSLinkAttributeName]) {
+                                        NSMutableDictionary *dict = [replacementAttributes mutableCopy];
+                                        dict[NSLinkAttributeName] = URL;
+                                        replacementAttributes = dict;
+                                    }
 									replaceMarkers = YES;
 								}
 								else {
@@ -522,9 +536,11 @@ static void updateAttributedString(NSMutableAttributedString *result, NSString *
 										if (styleAttributes[MarkdownStyleLink]) {
 											replacementAttributes = styleAttributes[MarkdownStyleLink];
 										}
-										else {
-											replacementAttributes = @{ NSLinkAttributeName: synthesizedURL };
-										}
+                                        if (!replacementAttributes[NSLinkAttributeName]) {
+                                            NSMutableDictionary *dict = [replacementAttributes mutableCopy];
+                                            dict[NSLinkAttributeName] = URL;
+                                            replacementAttributes = dict;
+                                        }
 										replaceMarkers = YES;
 									}
 								}
@@ -541,6 +557,19 @@ static void updateAttributedString(NSMutableAttributedString *result, NSString *
 							NSCAssert(NO, @"Not implemented");
 #endif
 							break;
+                        case MarkdownSpanUnderline:
+#if ALLOW_UNDERLINE
+                            if (styleAttributes[MarkdownStyleUnderline]) {
+                                replacementAttributes = styleAttributes[MarkdownStyleUnderline];
+                            }
+                            else {
+                                replacementAttributes = @{ NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle) };
+                            }
+                            replaceMarkers = YES;
+#else
+                            NSCAssert(NO, @"Not implemented");
+#endif
+                            break;
 					}
                      
 					if (replaceMarkers) {
@@ -644,6 +673,10 @@ static void removeEscapedCharacterSetInAttributedString(NSMutableAttributedStrin
 	// applied as the Markdown syntax is processed by updateAttributedString().
 	NSMutableAttributedString *result = [[NSMutableAttributedString alloc] initWithString:markdownString attributes:baseAttributes];
 
+#if ALLOW_UNDERLINE
+    updateAttributedString(result, underlineStart, nil, underlineEnd, MarkdownSpanUnderline, styleAttributes);
+#endif
+    
 #if ALLOW_LINKS
     // replace [] and () markers with a link attribute
 	NSString *linkInlineDividerMarker = [linkInlineStartDivider stringByAppendingString:linkInlineEndDivider];
@@ -951,6 +984,13 @@ static void emitMarkdown(NSMutableString *result, NSString *normalizedString, NS
 			currentRangeHasCode = YES;
 		}
 #endif
+        
+#if ALLOW_UNDERLINE
+        BOOL currentRangeHasUnderline = NO;
+        if (currentAttributes[NSUnderlineStyleAttributeName]) {
+            currentRangeHasUnderline = YES;
+        }
+#endif
 		
 		// compare current traits to previous states
 		NSString *prefixString = @"";
@@ -1012,6 +1052,13 @@ static void emitMarkdown(NSMutableString *result, NSString *normalizedString, NS
 			}
 		}
 		
+#if ALLOW_UNDERLINE
+        if (currentRangeHasUnderline) {
+            prefixString = [prefixString stringByAppendingString:underlineStart];
+            suffixString = [suffixString stringByAppendingString:underlineEnd];
+        }
+#endif
+
 #if ALLOW_CODE_MARKERS
 		if (currentRangeHasCode) {
 			prefixString = [prefixString stringByAppendingString:codeStart];

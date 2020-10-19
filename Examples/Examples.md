@@ -10,6 +10,6 @@ Styles **of _text_ can be embedded**, _like **this**, too_.
 
 Both [inline links](https://iconfactory.com) and automatic links like <https://iconfactory.com> are supported.
 
-Contrarians can even do __bold__ and *italics*.
+Contrarians can even do __bold__, <u>underline</u> and *italics*.
 
 Feel free to edit this text and watch for changes in the other view.
